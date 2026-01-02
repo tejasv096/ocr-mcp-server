@@ -30,17 +30,36 @@ const parseForm = async (req: NextApiRequest): Promise<{ fields: formidable.Fiel
 };
 
 const extractFromPDF = async (filePath: string): Promise<string> => {
-  try {
-    const dataBuffer = await fs.readFile(filePath);
-    const data = await pdfParse(dataBuffer, {
-      max: 0, // No page limit
-      version: 'v2.0.550', // Use specific version
-    });
-    return data.text;
-  } catch (error: any) {
-    // If PDF parsing fails, it might be a scanned PDF
-    throw new Error('Unable to extract text from PDF. This might be a scanned PDF or image-based PDF. Try converting it to an image first.');
+  const dataBuffer = await fs.readFile(filePath);
+
+  // Try multiple parsing strategies
+  const strategies = [
+    { name: 'default', options: {} },
+    { name: 'max0', options: { max: 0 } },
+    { name: 'pagerender', options: {
+      pagerender: async (pageData: any) => {
+        const textContent = await pageData.getTextContent();
+        return textContent.items.map((item: any) => item.str).join(' ');
+      }
+    }},
+  ];
+
+  let lastError: any = null;
+
+  for (const strategy of strategies) {
+    try {
+      const data = await pdfParse(dataBuffer, strategy.options);
+      if (data.text && data.text.trim().length > 0) {
+        return data.text;
+      }
+    } catch (error: any) {
+      lastError = error;
+      console.log(`PDF parsing failed with ${strategy.name}:`, error.message);
+    }
   }
+
+  // If all strategies fail, provide helpful error
+  throw new Error('Unable to extract text from this PDF. It may be scanned, image-based, or have structural issues. Try: 1) Converting to image and using OCR, 2) Re-saving the PDF, or 3) Using a different PDF.');
 };
 
 const extractFromWord = async (filePath: string): Promise<string> => {
