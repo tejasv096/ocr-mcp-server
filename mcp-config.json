@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "ocr-server": {
+      "command": "node",
+      "args": ["mcp-server/index.js"],
+      "description": "OCR text extraction server for PDF, Word, and image files"
+    }
+  }
+}
+
