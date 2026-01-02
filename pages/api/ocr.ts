@@ -36,21 +36,28 @@ const extractFromPDF = async (filePath: string): Promise<string> => {
   const strategies = [
     { name: 'default', options: {} },
     { name: 'max0', options: { max: 0 } },
-    { name: 'pagerender', options: {
-      pagerender: async (pageData: any) => {
-        const textContent = await pageData.getTextContent();
-        return textContent.items.map((item: any) => item.str).join(' ');
+    {
+      name: 'pagerender',
+      options: {
+        pagerender: (pageData: any) => {
+          return pageData.getTextContent().then((textContent: any) => {
+            return textContent.items.map((item: any) => item.str).join(' ');
+          });
+        }
       }
-    }},
+    },
   ];
 
   let lastError: any = null;
+  let extractedText = '';
 
   for (const strategy of strategies) {
     try {
       const data = await pdfParse(dataBuffer, strategy.options);
       if (data.text && data.text.trim().length > 0) {
-        return data.text;
+        extractedText = data.text;
+        console.log(`PDF parsing succeeded with ${strategy.name}: ${extractedText.length} chars`);
+        return extractedText;
       }
     } catch (error: any) {
       lastError = error;
@@ -84,17 +91,29 @@ const extractFromWord = async (filePath: string): Promise<string> => {
 const extractFromImage = async (filePath: string): Promise<string> => {
   try {
     console.log('Starting OCR for image:', filePath);
+    const startTime = Date.now();
 
-    const { data: { text } } = await Tesseract.recognize(filePath, 'eng', {
+    // Create a worker with minimal configuration for Vercel compatibility
+    const worker = await Tesseract.createWorker('eng', 1, {
       logger: (m) => {
         // Log progress for debugging
         if (m.status === 'recognizing text') {
           console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+        } else if (m.status) {
+          console.log(`OCR Status: ${m.status}`);
         }
       },
+      cachePath: '/tmp',
+      cacheMethod: 'write',
     });
 
-    console.log('OCR completed, text length:', text.length);
+    console.log('Worker created, starting recognition...');
+    const { data: { text } } = await worker.recognize(filePath);
+
+    await worker.terminate();
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`OCR completed in ${duration}s, text length: ${text.length}`);
 
     if (!text || text.trim().length === 0) {
       return 'No text could be detected in the image. Please ensure the image contains clear, readable text.';
