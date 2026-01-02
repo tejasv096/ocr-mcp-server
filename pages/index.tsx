@@ -26,16 +26,33 @@ export default function Home() {
     setError('');
     setExtractedText('');
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
+      // Convert file to base64
+      const reader = new FileReader();
+      const fileData = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Determine file type
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      let fileType = 'pdf';
+      if (ext === 'docx') fileType = 'docx';
+      else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(ext || '')) fileType = 'image';
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
       const response = await fetch('/api/ocr', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          file: fileData,
+          type: fileType,
+        }),
         signal: controller.signal,
       });
 

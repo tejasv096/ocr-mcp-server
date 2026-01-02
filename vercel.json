@@ -1,6 +1,7 @@
 {
   "functions": {
-    "pages/api/**/*.ts": {
+    "api/ocr.py": {
+      "runtime": "python3.9",
       "maxDuration": 60,
       "memory": 1024
     }
