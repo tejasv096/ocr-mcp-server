@@ -30,22 +30,62 @@ const parseForm = async (req: NextApiRequest): Promise<{ fields: formidable.Fiel
 };
 
 const extractFromPDF = async (filePath: string): Promise<string> => {
-  const dataBuffer = await fs.readFile(filePath);
-  const data = await pdfParse(dataBuffer);
-  return data.text;
+  try {
+    const dataBuffer = await fs.readFile(filePath);
+    const data = await pdfParse(dataBuffer, {
+      max: 0, // No page limit
+      version: 'v2.0.550', // Use specific version
+    });
+    return data.text;
+  } catch (error: any) {
+    // If PDF parsing fails, it might be a scanned PDF
+    throw new Error('Unable to extract text from PDF. This might be a scanned PDF or image-based PDF. Try converting it to an image first.');
+  }
 };
 
 const extractFromWord = async (filePath: string): Promise<string> => {
-  const buffer = await fs.readFile(filePath);
-  const result = await mammoth.extractRawText({ buffer });
-  return result.value;
+  try {
+    const buffer = await fs.readFile(filePath);
+    const result = await mammoth.extractRawText({ buffer });
+
+    if (!result.value || result.value.trim().length === 0) {
+      throw new Error('No text content found in the document');
+    }
+
+    return result.value;
+  } catch (error: any) {
+    // Handle .doc (old format) vs .docx issues
+    if (error.message && error.message.includes('not a valid')) {
+      throw new Error('Unable to read this Word document. Please ensure it is a valid .docx file (not .doc). Try saving it as .docx in Word.');
+    }
+    throw new Error(`Failed to extract text from Word document: ${error.message}`);
+  }
 };
 
 const extractFromImage = async (filePath: string): Promise<string> => {
-  const { data: { text } } = await Tesseract.recognize(filePath, 'eng', {
-    logger: () => {}, // Suppress logs in production
-  });
-  return text;
+  try {
+    console.log('Starting OCR for image:', filePath);
+
+    const { data: { text } } = await Tesseract.recognize(filePath, 'eng', {
+      logger: (m) => {
+        // Log progress for debugging
+        if (m.status === 'recognizing text') {
+          console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+        }
+      },
+    });
+
+    console.log('OCR completed, text length:', text.length);
+
+    if (!text || text.trim().length === 0) {
+      return 'No text could be detected in the image. Please ensure the image contains clear, readable text.';
+    }
+
+    return text;
+  } catch (error: any) {
+    console.error('OCR Error:', error);
+    throw new Error(`Failed to perform OCR on image: ${error.message}`);
+  }
 };
 
 const getFileType = (filename: string): string => {

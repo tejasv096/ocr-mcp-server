@@ -30,10 +30,23 @@ export default function Home() {
     formData.append('file', file);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
       const response = await fetch('/api/ocr', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      // Handle non-JSON responses
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
 
       const data = await response.json();
 
@@ -41,9 +54,13 @@ export default function Home() {
         throw new Error(data.error || 'Failed to extract text');
       }
 
-      setExtractedText(data.text);
+      setExtractedText(data.text || 'No text could be extracted from the file.');
     } catch (err: any) {
-      setError(err.message || 'An error occurred while processing the file');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. The file may be too large or complex. Try a smaller file or simpler image.');
+      } else {
+        setError(err.message || 'An error occurred while processing the file');
+      }
     } finally {
       setLoading(false);
     }
@@ -51,6 +68,19 @@ export default function Home() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(extractedText);
+    alert('Text copied to clipboard!');
+  };
+
+  const getLoadingMessage = () => {
+    if (!file) return 'Processing...';
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'].includes(ext || '')) {
+      return 'Processing image with OCR... This may take 10-30 seconds.';
+    }
+    if (ext === 'pdf') {
+      return 'Extracting text from PDF...';
+    }
+    return 'Processing document...';
   };
 
   return (
@@ -132,7 +162,7 @@ export default function Home() {
                 disabled={!file || loading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Processing...' : 'Extract Text'}
+                {loading ? getLoadingMessage() : 'Extract Text'}
               </button>
             </form>
 

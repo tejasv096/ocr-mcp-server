@@ -1,0 +1,33 @@
+OCR Document MCP Server Test Document
+
+This is a test document for the OCR Document MCP Server.
+
+Key Features:
+- Document processing for PDF, DOCX, and image files
+- OCR capabilities using Tesseract
+- Semantic search with FAISS vector database
+- Question answering using RAG (Retrieval Augmented Generation)
+- Support for multiple LLM providers (OpenAI, Anthropic, Ollama)
+
+Technical Details:
+- Built with Python 3.10+
+- Uses sentence-transformers for embeddings
+- Implements MCP (Model Context Protocol) for integration
+- Structured logging with JSON format
+- Comprehensive error handling
+
+Sample Questions to Test:
+1. What are the key features of this system?
+2. Which LLM providers are supported?
+3. What OCR technology is used?
+4. How does the semantic search work?
+
+This document contains enough content to test the text chunking, embedding generation, and question answering capabilities of the system.
+
+The system should be able to:
+- Process this document
+- Generate embeddings for semantic search
+- Answer questions based on the content
+- Provide relevant context from the document
+
+Test completed successfully if you can see this content processed and searchable.
