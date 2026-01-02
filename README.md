@@ -138,7 +138,26 @@ All tests passing with Docker container:
 
 ## Deployment
 
-### Deploy to Railway.app (Recommended)
+### Deploy to Render.com - 🆓 FREE (Recommended)
+
+1. Sign up at https://render.com
+2. New → Web Service → Connect GitHub
+3. Select repository: `tejasv096/ocr-mcp-server`
+4. Settings:
+   - Environment: Docker
+   - Instance Type: **Free**
+   - Health Check Path: `/health`
+5. Deploy and get public URL (e.g., `https://ocr-mcp-server.onrender.com`)
+6. Update Vercel environment variable:
+   - `NEXT_PUBLIC_API_URL=https://ocr-mcp-server.onrender.com`
+
+**Cost**: $0/month (100% FREE!)
+
+**Limitations**: Sleeps after 15 min (30-60s cold start on first request)
+
+**Detailed guide**: See [RENDER-DEPLOYMENT.md](RENDER-DEPLOYMENT.md)
+
+### Deploy to Railway.app (Faster, $5/month)
 
 1. Sign up at https://railway.app
 2. Click "New Project" → "Deploy from GitHub repo"
@@ -148,13 +167,7 @@ All tests passing with Docker container:
 6. Update Vercel environment variable:
    - `NEXT_PUBLIC_API_URL=https://your-app.railway.app`
 
-**Cost**: ~$5/month
-
-### Deploy to Render.com (Free Tier)
-
-1. Sign up at https://render.com
-2. New → Web Service → Connect GitHub
-3. Select repository
+**Cost**: ~$5/month (no cold starts, always on)
 4. Render auto-detects Dockerfile
 5. Get public URL
 

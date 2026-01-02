@@ -11,7 +11,29 @@
 
 ## 🚀 Deploy Backend (Docker)
 
-### Option 1: Railway.app (Recommended - $5/month)
+### Option 1: Render.com - 🆓 FREE (Recommended)
+
+**Cost**: $0/month - Completely FREE!
+
+1. **Sign up**: https://render.com
+2. **New** → "Web Service"
+3. **Connect GitHub**: Select `tejasv096/ocr-mcp-server`
+4. **Settings**:
+   - Name: `ocr-mcp-server`
+   - Environment: Docker
+   - Instance Type: **Free**
+   - Health Check Path: `/health`
+5. **Deploy**: Click "Create Web Service"
+6. **Get URL**: Copy your app URL (e.g., `https://ocr-mcp-server.onrender.com`)
+
+**Limitations**:
+- Sleeps after 15 min inactivity (30-60s cold start)
+- 512 MB RAM, 0.1 CPU (slower but works)
+- Perfect for sharing and demos!
+
+**See detailed guide**: [RENDER-DEPLOYMENT.md](RENDER-DEPLOYMENT.md)
+
+### Option 2: Railway.app - $5/month (Faster, Always On)
 
 1. **Sign up**: https://railway.app
 2. **New Project** → "Deploy from GitHub repo"
@@ -20,21 +42,7 @@
 5. **Deploy**: Click deploy
 6. **Get URL**: Copy your app URL (e.g., `https://ocr-mcp-server-production.up.railway.app`)
 
-**Environment Variables**: None needed for backend
-
-### Option 2: Render.com (Free tier available)
-
-1. **Sign up**: https://render.com
-2. **New** → "Web Service"
-3. **Connect GitHub**: Select `tejasv096/ocr-mcp-server`
-4. **Settings**:
-   - Name: `ocr-mcp-server`
-   - Environment: Docker
-   - Plan: Free or Starter
-5. **Deploy**: Click "Create Web Service"
-6. **Get URL**: Copy your app URL
-
-**Note**: Free tier may be slower and sleep after inactivity
+**Benefits**: No cold starts, faster, always on
 
 ---
 
@@ -143,12 +151,14 @@ After deployment, you should see:
 
 | Service | Plan | Cost | Features |
 |---------|------|------|----------|
-| **Railway.app** | Hobby | $5/month | 500 hours, fast, reliable |
-| **Render.com** | Free | $0 | Slower, sleeps after 15min |
+| **Render.com** | Free | **$0** | Sleeps after 15min, 512MB RAM |
 | **Render.com** | Starter | $7/month | Always on, faster |
-| **Vercel** | Hobby | Free | Frontend hosting |
+| **Railway.app** | Hobby | $5/month | 500 hours, fast, reliable |
+| **Vercel** | Hobby | **Free** | Frontend hosting |
 
-**Recommended**: Railway.app ($5/month) + Vercel (Free) = **$5/month total**
+**Recommended for FREE**: Render.com (Free) + Vercel (Free) = **$0/month total** 🎉
+
+**Recommended for Production**: Railway.app ($5/month) + Vercel (Free) = **$5/month total**
 
 ---
 

@@ -78,13 +78,24 @@ export default function Home() {
   const getLoadingMessage = () => {
     if (!file) return 'Processing...';
     const ext = file.name.split('.').pop()?.toLowerCase();
+
+    // Check if using production API (Render.com free tier)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const isProduction = apiUrl.includes('onrender.com');
+
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'].includes(ext || '')) {
-      return 'Processing image with OCR... This may take 10-30 seconds.';
+      return isProduction
+        ? 'Processing image with OCR... First request may take up to 60 seconds (server waking up).'
+        : 'Processing image with OCR... This may take 10-30 seconds.';
     }
     if (ext === 'pdf') {
-      return 'Extracting text from PDF...';
+      return isProduction
+        ? 'Extracting text from PDF... First request may take up to 60 seconds (server waking up).'
+        : 'Extracting text from PDF...';
     }
-    return 'Processing document...';
+    return isProduction
+      ? 'Processing document... First request may take up to 60 seconds (server waking up).'
+      : 'Processing document...';
   };
 
   return (
@@ -98,7 +109,7 @@ export default function Home() {
 
       <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               OCR Text Extractor
             </h1>
@@ -106,6 +117,25 @@ export default function Home() {
               Upload PDF, Word documents, or images to extract text
             </p>
           </div>
+
+          {/* Free Tier Info Banner */}
+          {(process.env.NEXT_PUBLIC_API_URL || '').includes('onrender.com') && (
+            <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start">
+                <svg className="h-5 w-5 text-blue-400 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-blue-800">Free Tier Notice</h3>
+                  <p className="mt-1 text-sm text-blue-700">
+                    This app uses a free server that sleeps after 15 minutes of inactivity.
+                    Your first request may take 30-60 seconds to wake up the server.
+                    Subsequent requests will be much faster!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
             <form onSubmit={handleSubmit} className="space-y-6">
