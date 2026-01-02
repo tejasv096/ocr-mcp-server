@@ -1,66 +1,101 @@
-# OCR MCP Server (Python)
+# OCR MCP Server (Docker + Python)
 
-A Model Context Protocol (MCP) server that provides OCR (Optical Character Recognition) capabilities for extracting text from PDF files, Word documents, and images using Python.
+A Docker-based OCR server with Flask API and Next.js web interface for extracting text from PDFs, images, and Word documents.
 
 ## Features
 
-- **PDF Text Extraction**: Extract text from PDF documents using PyPDF2 with OCR fallback for scanned PDFs
-- **Word Document Processing**: Extract text from .docx files using python-docx
-- **Image OCR**: Extract text from images using pytesseract (requires Tesseract installation)
-- **MCP Server**: Standalone Python server compatible with AI tools supporting the Model Context Protocol
+- ✅ **PDF Text Extraction**: PyPDF2 with OCR fallback for scanned PDFs
+- ✅ **Image OCR**: Tesseract OCR 5.5 for images (PNG, JPG, etc.)
+- ✅ **Word Documents**: python-docx for .docx files
+- ✅ **Web Interface**: Next.js frontend for easy file upload
+- ✅ **MCP Server**: Python server for AI assistant integration
+- ✅ **Docker**: Fully containerized with all dependencies
 
 ## Tech Stack
 
-- **Python 3.14+**
-- **OCR Engine**: pytesseract + Pillow
-- **PDF Processing**: PyPDF2 + pdf2image
+- **Backend**: Python 3.11 + Flask
+- **OCR Engine**: Tesseract OCR 5.5 + pytesseract
+- **PDF Processing**: PyPDF2 + pdf2image + Poppler
+- **Image Processing**: Pillow
 - **Word Processing**: python-docx
-- **MCP SDK**: mcp
+- **Frontend**: Next.js 14 + TypeScript
+- **Deployment**: Docker (Backend), Vercel (Frontend)
 
-## Installation
+## Quick Start
 
-### 1. Install Python Dependencies
+### 1. Start Docker Container
 
 ```bash
-pip install -r requirements.txt
+# Start the OCR API server
+docker-compose up -d
+
+# Check if running
+docker-compose ps
 ```
 
-### 2. Install Tesseract OCR (Optional - for image OCR)
+The Docker container includes:
+- Python 3.11
+- Tesseract OCR 5.5
+- All Python dependencies
+- Flask API server on port 8000
 
-**Windows:**
-- Download from: https://github.com/UB-Mannheim/tesseract/wiki
-- Install to `C:\Program Files\Tesseract-OCR\`
-- Add to PATH or the script will auto-detect it
+### 2. Start Frontend (Optional)
 
-**Linux:**
 ```bash
-sudo apt-get install tesseract-ocr
+# Install Node.js dependencies
+npm install
+
+# Start Next.js dev server
+npm run dev
 ```
 
-**macOS:**
+Frontend will run on http://localhost:3000
+
+### 3. Test the API
+
 ```bash
-brew install tesseract
+# Run all tests
+python test-docker-api.py
 ```
 
 ## Usage
 
-### Running the MCP Server
+### Docker Commands
+
+```bash
+# Start container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop container
+docker-compose down
+
+# Rebuild after changes
+docker-compose up --build -d
+```
+
+### API Endpoints
+
+**Health Check:**
+```bash
+curl http://localhost:8000/health
+```
+
+**OCR Extraction:**
+```bash
+curl -X POST http://localhost:8000/api/ocr \
+  -F "file=@sample_documents/test.pdf"
+```
+
+### MCP Server (Local)
+
+For AI assistant integration:
 
 ```bash
 python server.py
 ```
-
-The server will run on stdio and can be integrated with AI tools that support the Model Context Protocol.
-
-### Testing
-
-Run the test script to verify all functionality:
-
-```bash
-python test_ocr.py
-```
-
-This will test PDF, Word, and Image extraction with the sample files in `sample_documents/`.
 
 ## MCP Tool
 
@@ -88,62 +123,104 @@ Extract text from PDF, Word documents, or images.
 - **Word**: .docx
 - **Images**: .jpg, .jpeg, .png, .gif, .bmp, .tiff (requires Tesseract)
 
-## Test Results
+## Test Results (Docker)
 
-Tested with sample files:
+All tests passing with Docker container:
 
-| File Type | Status | Method |
-|-----------|--------|--------|
-| PDF (invoice_sample 2.pdf) | ✅ PASS | Text extraction (291 chars) |
-| PDF (purchase_order_sample 2.pdf) | ✅ PASS | Text extraction (282 chars) |
-| Word (test_document.docx) | ✅ PASS | python-docx (1153 chars) |
-| Image (test_ocr_image.png) | ⚠️ Requires Tesseract | pytesseract |
+| File Type | Status | Characters | Method |
+|-----------|--------|-----------|--------|
+| PDF (invoice_sample 2.pdf) | ✅ **PASS** | 289 chars | PyPDF2 |
+| PDF (purchase_order_sample 2.pdf) | ✅ **PASS** | 280 chars | PyPDF2 |
+| Word (test_document.docx) | ✅ **PASS** | 1153 chars | python-docx |
+| Image (test_ocr_image.png) | ✅ **PASS** | 222 chars | Tesseract OCR |
 
-## Configuration
+**Success Rate: 100% (4/4)** 🎉
 
-The server automatically detects Tesseract installation in common locations:
-- Windows: `C:\Program Files\Tesseract-OCR\tesseract.exe`
-- Windows (x86): `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`
-- Linux: `/usr/bin/tesseract`
-- macOS: `/usr/local/bin/tesseract`
+## Deployment
 
-## Error Handling
+### Deploy to Railway.app (Recommended)
 
-- **PDF Extraction**: Falls back to OCR if text extraction fails
-- **Image OCR**: Provides clear error message if Tesseract is not installed
-- **Word Documents**: Handles .docx format (not legacy .doc)
+1. Sign up at https://railway.app
+2. Click "New Project" → "Deploy from GitHub repo"
+3. Select your repository
+4. Railway auto-detects Dockerfile
+5. Get public URL (e.g., `https://your-app.railway.app`)
+6. Update Vercel environment variable:
+   - `NEXT_PUBLIC_API_URL=https://your-app.railway.app`
 
-## Development
+**Cost**: ~$5/month
 
-### Project Structure
+### Deploy to Render.com (Free Tier)
+
+1. Sign up at https://render.com
+2. New → Web Service → Connect GitHub
+3. Select repository
+4. Render auto-detects Dockerfile
+5. Get public URL
+
+**Cost**: Free tier available
+
+## Environment Variables
+
+Create `.env.local` for frontend:
+
+```bash
+# Local Docker
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Production (Railway/Render)
+NEXT_PUBLIC_API_URL=https://your-app.railway.app
+```
+
+Add to Vercel dashboard for production deployment.
+
+## Project Structure
 
 ```
 ocr-mcp-server/
-├── server.py              # Main MCP server
-├── test_ocr.py           # Test script
-├── requirements.txt      # Python dependencies
-├── sample_documents/     # Test files
+├── Dockerfile                 # Docker image definition
+├── docker-compose.yml         # Docker orchestration
+├── server_api.py              # Flask API server (Docker)
+├── server.py                  # MCP server (local use)
+├── test-docker-api.py         # Docker API tests
+├── test_ocr.py                # Local MCP tests
+├── requirements.txt           # Python dependencies
+├── pages/                     # Next.js pages
+│   └── index.tsx              # Web interface
+├── sample_documents/          # Test files
 │   ├── invoice_sample 2.pdf
 │   ├── purchase_order_sample 2.pdf
 │   ├── test_document.docx
 │   └── test_ocr_image.png
+├── .env.local.example         # Environment template
+├── .dockerignore              # Docker exclusions
 └── README.md
 ```
 
-### Dependencies
+## Dependencies
 
-- `pytesseract==0.3.13` - Python wrapper for Tesseract OCR
+**Python (Docker):**
+- `pytesseract==0.3.13` - Tesseract OCR wrapper
 - `Pillow>=11.0.0` - Image processing
 - `PyPDF2==3.0.1` - PDF text extraction
-- `pdf2image==1.17.0` - Convert PDF to images for OCR
+- `pdf2image==1.17.0` - PDF to image conversion
 - `python-docx==1.1.2` - Word document processing
+- `flask==3.0.0` - Web API framework
+- `flask-cors==4.0.0` - CORS support
 - `mcp==1.1.2` - Model Context Protocol SDK
+
+**Frontend:**
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+
+## Supported File Types
+
+- **PDF**: .pdf (text-based and scanned with OCR)
+- **Word**: .docx
+- **Images**: .jpg, .jpeg, .png, .gif, .bmp, .tiff
 
 ## License
 
 MIT
-
-## Author
-
-OCR MCP Server - Python Implementation
 

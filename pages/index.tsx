@@ -34,12 +34,10 @@ export default function Home() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-      // Use environment variable for API URL, fallback to /api/ocr for Vercel
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/ocr`
-        : '/api/ocr';
+      // Get API URL from environment variable (Docker container)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${apiUrl}/api/ocr`, {
         method: 'POST',
         body: formData,
         signal: controller.signal,
