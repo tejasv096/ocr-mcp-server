@@ -1,128 +1,117 @@
-# OCR MCP Server
+# OCR MCP Server (Python)
 
-A Model Context Protocol (MCP) server with OCR capabilities that extracts text from PDF, Word documents, and images. Includes a professional web interface built with Next.js and deployable on Vercel.
+A Model Context Protocol (MCP) server that provides OCR (Optical Character Recognition) capabilities for extracting text from PDF files, Word documents, and images using Python.
 
 ## Features
 
-- 📄 **PDF Text Extraction** - Extract text from PDF documents
-- 📝 **Word Document Processing** - Support for .docx and .doc files
-- 🖼️ **Image OCR** - Extract text from images (JPG, PNG, GIF, BMP, TIFF)
-- 🌐 **Web Interface** - Clean, professional UI for file uploads
-- 🚀 **Vercel Ready** - Optimized for serverless deployment
-- 🔧 **MCP Compatible** - Standalone MCP server for integration with AI tools
+- **PDF Text Extraction**: Extract text from PDF documents using PyPDF2 with OCR fallback for scanned PDFs
+- **Word Document Processing**: Extract text from .docx files using python-docx
+- **Image OCR**: Extract text from images using pytesseract (requires Tesseract installation)
+- **MCP Server**: Standalone Python server compatible with AI tools supporting the Model Context Protocol
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **OCR Engine**: Tesseract.js
-- **PDF Processing**: pdf-parse
-- **Word Processing**: mammoth
-- **MCP SDK**: @modelcontextprotocol/sdk
+- **Python 3.14+**
+- **OCR Engine**: pytesseract + Pillow
+- **PDF Processing**: PyPDF2 + pdf2image
+- **Word Processing**: python-docx
+- **MCP SDK**: mcp
 
-## Getting Started
+## Installation
 
-### Prerequisites
+### 1. Install Python Dependencies
 
-- Node.js 18+ installed
-- npm or yarn package manager
-
-### Installation
-
-1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd ocr-mcp-server
+pip install -r requirements.txt
 ```
 
-2. Install dependencies:
+### 2. Install Tesseract OCR (Optional - for image OCR)
+
+**Windows:**
+- Download from: https://github.com/UB-Mannheim/tesseract/wiki
+- Install to `C:\Program Files\Tesseract-OCR\`
+- Add to PATH or the script will auto-detect it
+
+**Linux:**
 ```bash
-npm install
+sudo apt-get install tesseract-ocr
 ```
 
-3. Run the development server:
+**macOS:**
 ```bash
-npm run dev
+brew install tesseract
 ```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Usage
 
-### Web Interface
-
-1. Navigate to the homepage
-2. Click "Upload a file" or drag and drop a file
-3. Supported formats: PDF, DOCX, DOC, JPG, PNG, GIF, BMP, TIFF
-4. Click "Extract Text" to process the file
-5. View and copy the extracted text
-
-### MCP Server
-
-The standalone MCP server can be used with AI tools that support the Model Context Protocol:
+### Running the MCP Server
 
 ```bash
-node mcp-server/index.js
+python server.py
 ```
 
-The server provides an `extract_text` tool that accepts:
-- `file_path`: Path to the file
-- `file_type`: Type of file (pdf, docx, or image)
+The server will run on stdio and can be integrated with AI tools that support the Model Context Protocol.
 
-## Deployment on Vercel
+### Testing
 
-### Quick Deploy
+Run the test script to verify all functionality:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=<your-repo-url>)
-
-### Manual Deployment
-
-1. Install Vercel CLI:
 ```bash
-npm install -g vercel
+python test_ocr.py
 ```
 
-2. Deploy:
-```bash
-vercel
-```
+This will test PDF, Word, and Image extraction with the sample files in `sample_documents/`.
 
-3. Follow the prompts to complete deployment
+## MCP Tool
 
-### Configuration
+The server provides one tool:
 
-The project includes `vercel.json` with optimized settings:
-- API routes have a 60-second timeout for processing large files
-- Next.js build configuration is pre-configured
+### `extract_text`
 
-## API Endpoints
+Extract text from PDF, Word documents, or images.
 
-### POST /api/ocr
+**Parameters:**
+- `file_path` (string): Path to the file to extract text from
+- `file_type` (string): Type of file - "pdf", "docx", or "image"
 
-Upload a file and extract text.
-
-**Request:**
-- Method: POST
-- Content-Type: multipart/form-data
-- Body: File upload with key "file"
-
-**Response:**
+**Example:**
 ```json
 {
-  "text": "Extracted text content..."
+  "file_path": "/path/to/document.pdf",
+  "file_type": "pdf"
 }
 ```
 
-**Error Response:**
-```json
-{
-  "error": "Error message"
-}
-```
+## Supported File Types
 
-## File Size Limits
+- **PDF**: .pdf (text-based and scanned with OCR fallback)
+- **Word**: .docx
+- **Images**: .jpg, .jpeg, .png, .gif, .bmp, .tiff (requires Tesseract)
 
-- Maximum file size: 10MB
-- Vercel serverless function timeout: 60 seconds
+## Test Results
+
+Tested with sample files:
+
+| File Type | Status | Method |
+|-----------|--------|--------|
+| PDF (invoice_sample 2.pdf) | ✅ PASS | Text extraction (291 chars) |
+| PDF (purchase_order_sample 2.pdf) | ✅ PASS | Text extraction (282 chars) |
+| Word (test_document.docx) | ✅ PASS | python-docx (1153 chars) |
+| Image (test_ocr_image.png) | ⚠️ Requires Tesseract | pytesseract |
+
+## Configuration
+
+The server automatically detects Tesseract installation in common locations:
+- Windows: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+- Windows (x86): `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`
+- Linux: `/usr/bin/tesseract`
+- macOS: `/usr/local/bin/tesseract`
+
+## Error Handling
+
+- **PDF Extraction**: Falls back to OCR if text extraction fails
+- **Image OCR**: Provides clear error message if Tesseract is not installed
+- **Word Documents**: Handles .docx format (not legacy .doc)
 
 ## Development
 
@@ -130,54 +119,31 @@ Upload a file and extract text.
 
 ```
 ocr-mcp-server/
-├── mcp-server/          # Standalone MCP server
-│   └── index.js
-├── pages/               # Next.js pages
-│   ├── api/
-│   │   └── ocr.ts      # OCR API endpoint
-│   ├── _app.tsx
-│   └── index.tsx       # Main UI
-├── styles/
-│   └── globals.css
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── next.config.js
-└── vercel.json
+├── server.py              # Main MCP server
+├── test_ocr.py           # Test script
+├── requirements.txt      # Python dependencies
+├── sample_documents/     # Test files
+│   ├── invoice_sample 2.pdf
+│   ├── purchase_order_sample 2.pdf
+│   ├── test_document.docx
+│   └── test_ocr_image.png
+└── README.md
 ```
 
-### Scripts
+### Dependencies
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-
-## Troubleshooting
-
-### Canvas Module Error
-
-If you encounter canvas-related errors, the `next.config.js` already includes the fix to externalize the canvas module on the server side.
-
-### Large File Processing
-
-For files larger than 10MB, you may need to:
-1. Increase the `maxFileSize` in `pages/api/ocr.ts`
-2. Adjust Vercel function timeout limits (requires paid plan)
-
-### OCR Accuracy
-
-For better OCR accuracy:
-- Use high-resolution images
-- Ensure good contrast and lighting
-- Use clear, readable fonts
-- Avoid skewed or rotated text
+- `pytesseract==0.3.13` - Python wrapper for Tesseract OCR
+- `Pillow>=11.0.0` - Image processing
+- `PyPDF2==3.0.1` - PDF text extraction
+- `pdf2image==1.17.0` - Convert PDF to images for OCR
+- `python-docx==1.1.2` - Word document processing
+- `mcp==1.1.2` - Model Context Protocol SDK
 
 ## License
 
 MIT
 
-## Contributing
+## Author
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+OCR MCP Server - Python Implementation
 
