@@ -27,32 +27,21 @@ export default function Home() {
     setExtractedText('');
 
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      const fileData = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      // Determine file type
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      let fileType = 'pdf';
-      if (ext === 'docx') fileType = 'docx';
-      else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(ext || '')) fileType = 'image';
+      // Use FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-      const response = await fetch('/api/ocr', {
+      // Use environment variable for API URL, fallback to /api/ocr for Vercel
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/ocr`
+        : '/api/ocr';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          file: fileData,
-          type: fileType,
-        }),
+        body: formData,
         signal: controller.signal,
       });
 
